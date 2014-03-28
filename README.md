@@ -3,9 +3,6 @@ Drones
 
 Traffic Drones Simulator
 
-Traffic Drones - Java Test
-
-
 
 Scenario:
 
