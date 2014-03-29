@@ -3,15 +3,26 @@ package sim.impl;
 import java.io.IOException;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import sim.Dispatcher;
 import sim.Drone;
 import sim.Location;
+import sim.Message;
+import sim.MessageTyppe;
 import sim.Node;
 import sim.Time;
 import sim.Transport;
+import sim.TransportListener;
 import sim.util.InputParser;
+import sim.util.MessageConvertor;
 
-public class DispatcherImpl implements Dispatcher {
+@Component
+public class DispatcherImpl implements Dispatcher , TransportListener {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(DispatcherImpl.class);
 	
 	private Transport transport;
 	
@@ -25,6 +36,7 @@ public class DispatcherImpl implements Dispatcher {
 	
 	public DispatcherImpl(){
 		this.transport = new TransportImpl(this);
+		this.transport.registerListener(this);
 		this.finishTime = new Time(8, 20);
 	}
 	
@@ -35,8 +47,8 @@ public class DispatcherImpl implements Dispatcher {
 
 	@Override
 	public void init() throws IOException {
-		nodes  = InputParser.loadRoutes("resources/routes.csv");
-		List<Location> stations = InputParser.loadStations("resources/stations.csv");
+		nodes  = InputParser.loadRoutes("src/main/resources/routes.csv");
+		List<Location> stations = InputParser.loadStations("src/main/resources/stations.csv");
 		InputParser.updateNodeLocation(nodes, stations);
 	}
 
@@ -47,13 +59,25 @@ public class DispatcherImpl implements Dispatcher {
 		
 		for( Node node : nodes){
 			
+			if( node.getTime().compareTo(finishTime) < 0 ){
+				
+				if( node.getDroneId().equals(drone5937.getId())){
+					transport.sendMessage(drone5937, MessageConvertor.locationToMessage(node.getLocation()));
+				}
+				else{
+					transport.sendMessage(drone6043, MessageConvertor.locationToMessage(node.getLocation()));
+				}
+			}
+			else{
+				transport.sendMessage(drone5937, new Message(MessageTyppe.SHUTDOWN));
+				transport.sendMessage(drone6043, new Message(MessageTyppe.SHUTDOWN));
+			}						
 		}
 	}
 
 	@Override
-	public void stop() {
-		// TODO Auto-generated method stub
+	public void onMessageReceived(Message message) {
+		LOG.info(message.toString());
 		
 	}
-
 }

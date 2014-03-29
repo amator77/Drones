@@ -37,4 +37,10 @@ public class Node {
 	public void setTime(Time time) {
 		this.time = time;
 	}
+
+	@Override
+	public String toString() {
+		return "Node [droneId=" + droneId + ", location=" + location
+				+ ", time=" + time + "]";
+	}
 }

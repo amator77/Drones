@@ -1,6 +1,5 @@
 package sim;
 
-import java.util.Arrays;
 
 /**
  * Message object.
@@ -47,6 +46,6 @@ public class Message {
 	@Override
 	public String toString() {
 		return "Message [type=" + type + ", payload="
-				+ new String(payload) + "]";
+				+ (payload != null ? new String(payload) : "")  + "]";
 	}
 }

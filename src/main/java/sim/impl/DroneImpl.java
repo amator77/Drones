@@ -27,16 +27,17 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 	private Location location;
 
 	private Transport transport;
-	
+
 	private Queue<Message> messagesQueue;
 
 	private static final Object LOCK = new Object();
-	
-	private static final Long SPEED = 1000L;  // the drone is moving with constant speed : 1 s/location
-	
+
+	private static final Long SPEED = 1000L; // the drone is moving with
+												// constant speed : 1 s/location
+
 	public DroneImpl(String id, Transport transport) {
 		this.id = id;
-		this.transport = transport;		
+		this.transport = transport;
 		messagesQueue = new LinkedBlockingQueue<Message>(10);
 		this.transport.registerListener(this);
 		new Thread(this, "Drone " + id).start();
@@ -47,21 +48,21 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 		return this.id;
 	}
 
-
 	@Override
 	public void run() {
-		LOG.info("Drone {} is deployed and ready to fly.", id);
+		LOG.info("Ready to fly.");
 
 		loop : while (true) {
 			
 			Message message = null;
 			
 			while( (message = this.messagesQueue.poll()) != null ){
+				LOG.info(message.toString());
+				
 				switch (message.getType()) {
 				
 				case SHUTDOWN: {
-					LOG.warn("Drone {} shutdown signal receveid.Aborting...",
-							this.id);
+					LOG.warn("Shutdown signal receveid.Aborting...");
 					break loop;
 				}					
 					
@@ -78,8 +79,7 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 						 
 					} catch (InterruptedException e) {						
 						LOG.warn(
-								"Drone {} moving state is interrupted.Aborting.",
-								this.id , this.id , e);
+								"Moving state is interrupted.Aborting.",e);
 						
 						break loop;
 					}																			
@@ -87,47 +87,45 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 				break;
 				
 				default:
-					LOG.info("Drone {} receive invalid message ! Ignoring...", this.id);									
+					LOG.info("Invalid message ! Ignoring...");									
 				}								
 			}
 						
 			synchronized (LOCK) {
 
 				try {
-					LOG.info("Drone {} is waiting for an new location", this.id);
+					LOG.info("Waiting for location to move.");
 					LOCK.wait();
 				} catch (InterruptedException e) {
 					LOG.warn(
-							"Drone {} waiting or moving state of this drone is interrupted.{} is aborted!",
-							this.id , this.id , e);
+							"Waiting state interrupted.Aborting!", e);
 					break;
 				}
 			}
 		}
 		
 
-		LOG.info("Drone {} is returning to base :).", id);
+		LOG.info("Returning to base .", id);
 	}
 
 	@Override
 	public void onMessageReceived(Message message) {
-		LOG.info("Drone: {} message received: {}", this.id, message);
-
+	
 		try {
-			
+
 			this.messagesQueue.add(message);
 
 			synchronized (LOCK) {
-				this.notify();
+				LOCK.notify();
 			}
-			
+
 		} catch (IllegalStateException ex) {
 			LOG.error("Drone memory is full! Ignoring the message...", ex);
 		}
 	}
 
 	@Override
-	public String getAddress() {		
+	public String getAddress() {
 		return this.id;
 	}
 
@@ -135,14 +133,14 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 	public Location getLocation() {
 		return this.location;
 	}
-	
+
 	private byte[] newTrafficReportEntry(Location location) {
 		TrafficReportEntry entry = new TrafficReportEntry();
 		entry.setDroneId(this.id);
 		entry.setSpeed(new Random().nextInt(200));
 		entry.setTime(new Date());
 		entry.setTrafficCondition(TrafficCondition.MODERATE);
-				
+
 		return MessageConvertor.objectToJsonBytesArray(entry);
 	}
 }
