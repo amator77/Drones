@@ -1,5 +1,7 @@
 package sim;
 
+import java.util.Arrays;
+
 /**
  * Message object.
  * @author leo
@@ -7,29 +9,30 @@ package sim;
  */
 public class Message {
 	
-	public enum TYPE { LOCATION , TRAFFIC_REPORT , SHUTDOWN , LOCATION_REACHED }
-	
-	private TYPE type;
+	/**
+	 * Message type.
+	 */
+	private MessageTyppe type;
 	
 	/**
 	 * Message payload. This can be null for signaling messages like SHUTDOWN.
 	 */
 	private byte[] payload;
 	
-	public Message(TYPE type){
+	public Message(MessageTyppe type){
 		this(type,null);		
 	}
 	
-	public Message(TYPE type , byte[] payload){
+	public Message(MessageTyppe type , byte[] payload){
 		this.type = type;
 		this.payload = payload;
 	}
 	
-	public TYPE getType() {
+	public MessageTyppe getType() {
 		return type;
 	}
 
-	public void setType(TYPE type) {
+	public void setType(MessageTyppe type) {
 		this.type = type;
 	}
 
@@ -39,5 +42,11 @@ public class Message {
 
 	public void setPayload(byte[] payload) {
 		this.payload = payload;
-	}		
+	}
+
+	@Override
+	public String toString() {
+		return "Message [type=" + type + ", payload="
+				+ new String(payload) + "]";
+	}
 }

@@ -14,7 +14,14 @@ public interface Transport {
 	 * @param message - the message
 	 */
 	public void sendMessage(Destination destination, Message message);
-		
+	
+	/**
+	 * Dispatcher address.
+	 * Drones needs to know Dispatcher address.
+	 * @return
+	 */
+	public Destination getDispatcherDestination();
+	
 	/**
 	 * Register listener for incoming messages.
 	 * @param listener
