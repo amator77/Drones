@@ -11,7 +11,7 @@ import sim.Dispatcher;
 import sim.Drone;
 import sim.Location;
 import sim.Message;
-import sim.MessageTyppe;
+import sim.MessageType;
 import sim.Node;
 import sim.Time;
 import sim.Transport;
@@ -20,64 +20,154 @@ import sim.util.InputParser;
 import sim.util.MessageConvertor;
 
 @Component
-public class DispatcherImpl implements Dispatcher , TransportListener {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(DispatcherImpl.class);
-	
+public class DispatcherImpl implements Dispatcher, TransportListener {
+
+	private static final Logger LOG = LoggerFactory
+			.getLogger(DispatcherImpl.class);
+
 	private Transport transport;
-	
+
 	private Drone drone6043;
-	
+
 	private Drone drone5937;
-	
+
+	private DispatcherThread drone6043DispatcherThread;
+
+	private DispatcherThread drone5937DispatcherThread;
+
 	private Time finishTime;
-	
-	private List<Node> nodes; 
-	
-	public DispatcherImpl(){
+
+	private List<Node> nodes;
+
+	public DispatcherImpl() {
 		this.transport = new TransportImpl(this);
 		this.transport.registerListener(this);
-		this.finishTime = new Time(8, 20);
+		this.finishTime = new Time(8, 10);		
 	}
-	
+
 	@Override
 	public String getAddress() {
 		return "dispatcher";
 	}
 
 	@Override
-	public void init() throws IOException {
-		nodes  = InputParser.loadRoutes("src/main/resources/routes.csv");
-		List<Location> stations = InputParser.loadStations("src/main/resources/stations.csv");
+	public void init() throws IOException {		
+		nodes = InputParser.loadRoutes("src/main/resources/routes.csv");
+		List<Location> stations = InputParser
+				.loadStations("src/main/resources/stations.csv");
 		InputParser.updateNodeLocation(nodes, stations);
+		
 	}
 
 	@Override
-	public void start() {
+	public void start() {		
 		this.drone5937 = new DroneImpl("5937", transport);
-		this.drone6043 = new DroneImpl("6043", transport);
-		
-		for( Node node : nodes){
-			
-			if( node.getTime().compareTo(finishTime) < 0 ){
-				
-				if( node.getDroneId().equals(drone5937.getId())){
-					transport.sendMessage(drone5937, MessageConvertor.locationToMessage(node.getLocation()));
-				}
-				else{
-					transport.sendMessage(drone6043, MessageConvertor.locationToMessage(node.getLocation()));
-				}
-			}
-			else{
-				transport.sendMessage(drone5937, new Message(MessageTyppe.SHUTDOWN));
-				transport.sendMessage(drone6043, new Message(MessageTyppe.SHUTDOWN));
-			}						
-		}
+		this.drone6043 = new DroneImpl("6043", transport);			
 	}
 
 	@Override
 	public void onMessageReceived(Message message) {
 		LOG.info(message.toString());
-		
+
+		switch (message.getType()) {
+		case ASK_FOR_LOCATION:
+
+			String droneId = new String(message.getPayload());
+
+			if (droneId.equals(this.drone5937.getId())) {
+				
+				if(this.drone5937DispatcherThread != null){
+					this.drone5937DispatcherThread.resumeSendingLocation();
+				}
+				else{
+					this.drone5937DispatcherThread = new DispatcherThread(drone5937);
+					this.drone5937DispatcherThread.start();
+				}
+									
+			} else if (droneId.equals(this.drone6043.getId())) {	
+				
+				if( this.drone6043DispatcherThread != null ){
+					this.drone6043DispatcherThread.resumeSendingLocation();		
+				}
+				else{
+					this.drone6043DispatcherThread = new DispatcherThread(drone6043);
+					this.drone6043DispatcherThread.start();
+				}
+			}
+
+			break;
+		case TRAFFIC_REPORT: {
+
+		}
+		break;
+
+		default:
+			LOG.info("Nothing to be done here!");
+			break;
+		}
+	}
+
+	/**
+	 * Dispatcher thread for sending locations or shutdown signal to a Drone.
+	 * This will send 10 locations and then will wait for Drone to ask for more locations.
+	 * @author leo
+	 * 
+	 */
+	class DispatcherThread extends Thread {
+
+		private Drone drone;
+
+		public final Object LOCK = new Object();
+
+		public DispatcherThread(Drone drone) {
+			super("Dispatcher drone "+drone.getId());
+			this.drone = drone;
+		}
+
+		public void resumeSendingLocation() {
+			synchronized (LOCK) {
+				LOCK.notify();
+			}
+		}
+
+		@Override
+		public void run() {
+			int count = 0;
+
+			for (Node node : nodes) {
+
+				if (node.getTime().compareTo(finishTime) < 0) {
+
+					if (node.getDroneId().equals(drone.getId())) {
+						count++;
+
+						if (count <= 10) {
+							transport.sendMessage(drone, MessageConvertor
+									.locationToMessage(node.getLocation()));
+						} else {
+							synchronized (LOCK) {
+
+								// wait for Drone to ask for next 10 locations.
+								try {
+									LOG.info("Waiting for drone to ask for location.");
+									LOCK.wait();
+									count = 0;
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								}
+							}
+						}
+					}
+				} else {
+					// Shutdown drone if the time is 08.10
+					transport.sendMessage(drone, new Message(
+							MessageType.SHUTDOWN));
+				}
+			}
+			
+			// Shutdown drone if there is no more location to go
+			transport.sendMessage(drone, new Message(
+					MessageType.SHUTDOWN));
+		}
 	}
 }

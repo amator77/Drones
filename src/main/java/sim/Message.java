@@ -11,27 +11,27 @@ public class Message {
 	/**
 	 * Message type.
 	 */
-	private MessageTyppe type;
+	private MessageType type;
 	
 	/**
 	 * Message payload. This can be null for signaling messages like SHUTDOWN.
 	 */
 	private byte[] payload;
 	
-	public Message(MessageTyppe type){
+	public Message(MessageType type){
 		this(type,null);		
 	}
 	
-	public Message(MessageTyppe type , byte[] payload){
+	public Message(MessageType type , byte[] payload){
 		this.type = type;
 		this.payload = payload;
 	}
 	
-	public MessageTyppe getType() {
+	public MessageType getType() {
 		return type;
 	}
 
-	public void setType(MessageTyppe type) {
+	public void setType(MessageType type) {
 		this.type = type;
 	}
 

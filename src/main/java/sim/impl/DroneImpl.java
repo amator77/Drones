@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import sim.Drone;
 import sim.Location;
 import sim.Message;
-import sim.MessageTyppe;
+import sim.MessageType;
 import sim.TrafficCondition;
 import sim.TrafficReportEntry;
 import sim.Transport;
@@ -32,8 +32,7 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 
 	private static final Object LOCK = new Object();
 
-	private static final Long SPEED = 1000L; // the drone is moving with
-												// constant speed : 1 s/location
+	private static final Long SPEED = 1000L; // the drone speed : 1 s/location
 
 	public DroneImpl(String id, Transport transport) {
 		this.id = id;
@@ -57,8 +56,7 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 			Message message = null;
 			
 			while( (message = this.messagesQueue.poll()) != null ){
-				LOG.info(message.toString());
-				
+				LOG.info(message.toString());				
 				switch (message.getType()) {
 				
 				case SHUTDOWN: {
@@ -72,9 +70,8 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 						Thread.sleep(SPEED);
 						this.location = MessageConvertor.messageToLocation(message);
 						
-						if( this.location.hasStationsNearby() ){
-							this.transport.sendMessage(transport.getDispatcherDestination(), new Message(MessageTyppe.IN_LOCATION));
-							this.transport.sendMessage(transport.getDispatcherDestination(), new Message(MessageTyppe.TRAFFIC_REPORT,newTrafficReportEntry(this.location)));							
+						if( this.location.hasStationsNearby() ){							
+							this.transport.sendMessage(transport.getDispatcherDestination(), new Message(MessageType.TRAFFIC_REPORT,newTrafficReportEntry(this.location)));							
 						}
 						 
 					} catch (InterruptedException e) {						
@@ -87,14 +84,16 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 				break;
 				
 				default:
-					LOG.info("Invalid message ! Ignoring...");									
+					LOG.info("Invalid message! Ignoring...");									
 				}								
 			}
-						
+			
+			this.transport.sendMessage(transport.getDispatcherDestination(), new Message(MessageType.ASK_FOR_LOCATION,this.id.getBytes()));
+			
 			synchronized (LOCK) {
 
 				try {
-					LOG.info("Waiting for location to move.");
+					LOG.info("Waiting for locations...");
 					LOCK.wait();
 				} catch (InterruptedException e) {
 					LOG.warn(
@@ -111,8 +110,7 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 	@Override
 	public void onMessageReceived(Message message) {
 	
-		try {
-
+		try {						
 			this.messagesQueue.add(message);
 
 			synchronized (LOCK) {

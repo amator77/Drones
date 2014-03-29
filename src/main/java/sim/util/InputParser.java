@@ -68,6 +68,7 @@ public class InputParser {
 	}
 
 	private static boolean isStationCloseToNode(Location loc, Node node) {
+		//TODO do this
 		return true;
 	}
 }

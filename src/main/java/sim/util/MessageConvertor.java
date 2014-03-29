@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 
 import sim.Location;
 import sim.Message;
-import sim.MessageTyppe;
+import sim.MessageType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,7 +17,7 @@ public class MessageConvertor {
 	
 	public static Location messageToLocation(Message message){
 		
-		if( message.getType() == MessageTyppe.MOVE_TO_LOCATION ){
+		if( message.getType() == MessageType.MOVE_TO_LOCATION ){
 			return jsonBytesArrayToObject(message.getPayload(),Location.class);
 		}
 		else{
@@ -26,10 +26,10 @@ public class MessageConvertor {
 	}
 	
 	public static Message locationToMessage(Location location){		
-		return new Message(MessageTyppe.MOVE_TO_LOCATION,objectToJsonBytesArray(location));
+		return new Message(MessageType.MOVE_TO_LOCATION,objectToJsonBytesArray(location));
 	}
 	
-	public static Message newMessage(MessageTyppe type, byte[] payload){		
+	public static Message newMessage(MessageType type, byte[] payload){		
 		return new Message(type,payload);
 	}
 	
