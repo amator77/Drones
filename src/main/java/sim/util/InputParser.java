@@ -1,7 +1,7 @@
 package sim.util;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class InputParser {
 
 		List<Location> stations = new ArrayList<Location>();
 
-		try (CSVReader reader = new CSVReader(new FileReader(file));) {
+		try (CSVReader reader = new CSVReader(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream(file)))) {
 			String[] nextLine;
 
 			while ((nextLine = reader.readNext()) != null) {
@@ -36,7 +36,7 @@ public class InputParser {
 
 		List<Node> nodes = new ArrayList<Node>();
 
-		try (CSVReader reader = new CSVReader(new FileReader(file));) {
+		try (CSVReader reader = new CSVReader(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream(file)))) {
 			String[] nextLine;
 
 			while ((nextLine = reader.readNext()) != null) {

@@ -60,9 +60,9 @@ public class DispatcherImpl implements Dispatcher, TransportListener {
 
 	@Override
 	public void init() throws IOException {		
-		nodes = InputParser.loadNodes("src/main/resources/routes.csv");
+		nodes = InputParser.loadNodes("routes.csv");
 		List<Location> stations = InputParser
-				.loadStations("src/main/resources/stations.csv");
+				.loadStations("stations.csv");
 		InputParser.updateNodeLocation(nodes, stations);		
 	}
 
