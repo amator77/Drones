@@ -14,5 +14,4 @@ public interface Dispatcher extends Destination {
 	 * Start simulation
 	 */
 	public void start();
-	
 }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import sim.Dispatcher;
@@ -14,6 +15,9 @@ import sim.Message;
 import sim.MessageType;
 import sim.Node;
 import sim.Time;
+import sim.TrafficReportEntry;
+import sim.TrafficReportRepository;
+import sim.TrafficReportService;
 import sim.Transport;
 import sim.TransportListener;
 import sim.util.InputParser;
@@ -39,7 +43,11 @@ public class DispatcherImpl implements Dispatcher, TransportListener {
 
 	private List<Node> nodes;
 
-	public DispatcherImpl() {
+	private TrafficReportService reportService;
+		
+	@Autowired
+	public DispatcherImpl( TrafficReportService reportService) {
+		this.reportService = reportService;
 		this.transport = new TransportImpl(this);
 		this.transport.registerListener(this);
 		this.finishTime = new Time(8, 10);		
@@ -52,11 +60,10 @@ public class DispatcherImpl implements Dispatcher, TransportListener {
 
 	@Override
 	public void init() throws IOException {		
-		nodes = InputParser.loadRoutes("src/main/resources/routes.csv");
+		nodes = InputParser.loadNodes("src/main/resources/routes.csv");
 		List<Location> stations = InputParser
 				.loadStations("src/main/resources/stations.csv");
-		InputParser.updateNodeLocation(nodes, stations);
-		
+		InputParser.updateNodeLocation(nodes, stations);		
 	}
 
 	@Override
@@ -97,7 +104,7 @@ public class DispatcherImpl implements Dispatcher, TransportListener {
 
 			break;
 		case TRAFFIC_REPORT: {
-
+			this.reportService.saveTrafficRepotEntry(MessageConvertor.jsonBytesArrayToObject(message.getPayload(), TrafficReportEntry.class));
 		}
 		break;
 
@@ -120,7 +127,7 @@ public class DispatcherImpl implements Dispatcher, TransportListener {
 		public final Object LOCK = new Object();
 
 		public DispatcherThread(Drone drone) {
-			super("Dispatcher drone "+drone.getId());
+			super("Dispatcher "+drone.getId());
 			this.drone = drone;
 		}
 

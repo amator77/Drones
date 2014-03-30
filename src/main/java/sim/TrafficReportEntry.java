@@ -2,26 +2,40 @@ package sim;
 
 import java.util.Date;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+@Entity
 public class TrafficReportEntry {
+	
+	@Id
+	@GeneratedValue
+	private Long id;
 	
 	/**
 	 * Drone id ,source of this report entry.
 	 */
+	@Column(nullable = false)
 	private String droneId;
 	
 	/**
 	 * Time of this report entry. 
 	 */
+	@Column(nullable = false)
 	private Date time;
 	
 	/**
 	 * Traffic speed in miles/h.
 	 */
+	@Column(nullable = false)
 	private Integer speed;
 		
 	/**
 	 *	 Traffic condition.
 	 */
+	@Column(nullable = false)
 	private TrafficCondition trafficCondition;
 
 	public String getDroneId() {

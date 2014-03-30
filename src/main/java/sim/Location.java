@@ -47,7 +47,7 @@ public class Location {
 		this.longitude = longitude;
 	}
 
-	public boolean hasStationsNearby() {
+	public boolean isHasStationsNearby() {
 		return hasStationsNearby;
 	}
 

@@ -70,7 +70,7 @@ public class DroneImpl implements Drone, Runnable, TransportListener {
 						Thread.sleep(SPEED);
 						this.location = MessageConvertor.messageToLocation(message);
 						
-						if( this.location.hasStationsNearby() ){							
+						if( this.location.isHasStationsNearby() ){							
 							this.transport.sendMessage(transport.getDispatcherDestination(), new Message(MessageType.TRAFFIC_REPORT,newTrafficReportEntry(this.location)));							
 						}
 						 
